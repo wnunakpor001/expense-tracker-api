@@ -8,7 +8,7 @@ const express    = require("express");
 const cors       = require("cors");
 const path = require("path");
 const connectDB  = require("./config/db");
-const expenseRoutes = require("./Routes/expenseRoutes"); 
+const expenseRoutes = require("./routes/expenseRoutes"); 
 const errorHandler  = require("./middleware/errorHandler");
 
 const app = express();
