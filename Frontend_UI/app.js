@@ -197,7 +197,7 @@ function renderList() {
       <div class="expense-amount">$${formatNum(exp.amount)}</div>
       <div class="item-actions">
         <button class="btn-edit" title="Edit" onclick='startEdit(${JSON.stringify(exp)})'>✏️</button>
-        <button class="btn-delete" title="Delete" onclick="deleteExpense(${exp._id})">🗑️</button>
+        <button class="btn-delete" title="Delete" onclick="deleteExpense('${exp._id}')">🗑️</button>
       </div>
     `;
     list.appendChild(item);
