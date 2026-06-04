@@ -1,171 +1,174 @@
 // controllers/expenseController.js
-// Contains the logic for each route.
-// Controllers read from the request, call the data store, and send the response.
+// All CRUD logic now uses Mongoose model methods instead of the in-memory store.
+// Mongoose returns Promises, so every function is async/await.
 
-const store = require("../data/expenseStore");
+const Expense = require("../models/Expense");
 
 /**
  * GET /expenses
- * Returns all expenses.
- * Supports optional query param: ?category=food to filter by category.
+ * Returns all expenses. Supports optional ?category= filter.
  */
-function getAllExpenses(req, res) {
-  let expenses = store.getAllExpenses();
+async function getAllExpenses(req, res) {
+  try {
+    const filter = {};
 
-  // Optional filtering by category via query string e.g. GET /expenses?category=food
-  
-  const { category } = req.query;
-  if (category) {
-    expenses = expenses.filter(
-      (e) => e.category === category.trim().toLowerCase()
-    );
+    // If ?category=food is passed, add it to the query filter
+    if (req.query.category) {
+      filter.category = req.query.category.trim().toLowerCase();
+    }
+
+    const expenses = await Expense.find(filter).sort({ createdAt: -1 }); // Newest first
+
+    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+    res.status(200).json({
+      success: true,
+      count: expenses.length,
+      total: parseFloat(total.toFixed(2)),
+      expenses,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  // Calculate the total amount of all returned expenses
-  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-
-  res.status(200).json({
-    success: true,
-    count: expenses.length,
-    total: parseFloat(total.toFixed(2)), // Round to 2 decimal places
-    expenses,
-  });
 }
 
 /**
  * GET /expenses/:id
- * Returns a single expense by its ID.
- * Sends 404 if no expense with that ID exists.
+ * Returns a single expense by its MongoDB _id.
  */
-function getExpenseById(req, res) {
-  const id = parseInt(req.params.id);
+async function getExpenseById(req, res) {
+  try {
+    const expense = await Expense.findById(req.params.id);
 
-  if (isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Expense ID must be a number",
-    });
+    if (!expense) {
+      return res.status(404).json({
+        success: false,
+        message: `Expense with ID ${req.params.id} not found`,
+      });
+    }
+
+    res.status(200).json({ success: true, expense });
+  } catch (error) {
+    // Mongoose throws a CastError when the ID format is invalid
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid expense ID format" });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  const expense = store.getExpenseById(id);
-
-  if (!expense) {
-    return res.status(404).json({
-      success: false,
-      message: `Expense with ID ${id} not found`,
-    });
-  }
-
-  res.status(200).json({ success: true, expense });
 }
 
 /**
  * POST /expenses
- * Creates a new expense from the request body.
- * Required fields: title, amount, category, date.
+ * Creates and saves a new expense to MongoDB.
  */
-function createExpense(req, res) {
-  const { title, amount, category, date } = req.body;
-  const expense = store.createExpense({ title, amount, category, date });
+async function createExpense(req, res) {
+  try {
+    const { title, amount, category, date } = req.body;
 
-  res.status(201).json({
-    success: true,
-    message: "Expense created successfully",
-    expense,
-  });
+    const expense = await Expense.create({ title, amount, category, date });
+
+    res.status(201).json({
+      success: true,
+      message: "Expense created successfully",
+      expense,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 }
 
 /**
  * PUT /expenses/:id
- * Fully updates an existing expense.
- * All fields (title, amount, category, date) are required in the body.
+ * Fully replaces an existing expense. All fields required.
  */
-function updateExpense(req, res) {
-  const id = parseInt(req.params.id);
+async function updateExpense(req, res) {
+  try {
+    const { title, amount, category, date } = req.body;
 
-  if (isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Expense ID must be a number",
+    const expense = await Expense.findByIdAndUpdate(
+      req.params.id,
+      { title, amount, category, date },
+      { new: true, runValidators: true } // new: return updated doc; runValidators: recheck schema rules
+    );
+
+    if (!expense) {
+      return res.status(404).json({
+        success: false,
+        message: `Expense with ID ${req.params.id} not found`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Expense updated successfully",
+      expense,
     });
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid expense ID format" });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  const { title, amount, category, date } = req.body;
-  const expense = store.updateExpense(id, { title, amount, category, date });
-
-  if (!expense) {
-    return res.status(404).json({
-      success: false,
-      message: `Expense with ID ${id} not found`,
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "Expense updated successfully",
-    expense,
-  });
 }
 
 /**
  * PATCH /expenses/:id
- * Partially updates an expense — only the fields provided in the body are changed.
- * At least one field must be provided.
+ * Partially updates an expense — only the provided fields are changed.
  */
-function patchExpense(req, res) {
-  const id = parseInt(req.params.id);
+async function patchExpense(req, res) {
+  try {
+    const expense = await Expense.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },  // $set only updates the fields provided
+      { new: true, runValidators: true }
+    );
 
-  if (isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Expense ID must be a number",
+    if (!expense) {
+      return res.status(404).json({
+        success: false,
+        message: `Expense with ID ${req.params.id} not found`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Expense updated successfully",
+      expense,
     });
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid expense ID format" });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  const expense = store.patchExpense(id, req.body);
-
-  if (!expense) {
-    return res.status(404).json({
-      success: false,
-      message: `Expense with ID ${id} not found`,
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "Expense updated successfully",
-    expense,
-  });
 }
 
 /**
  * DELETE /expenses/:id
- * Deletes an expense by ID and returns the deleted object.
+ * Deletes an expense from MongoDB and returns the deleted document.
  */
-function deleteExpense(req, res) {
-  const id = parseInt(req.params.id);
+async function deleteExpense(req, res) {
+  try {
+    const expense = await Expense.findByIdAndDelete(req.params.id);
 
-  if (isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Expense ID must be a number",
+    if (!expense) {
+      return res.status(404).json({
+        success: false,
+        message: `Expense with ID ${req.params.id} not found`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Expense deleted successfully",
+      expense,
     });
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid expense ID format" });
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  const expense = store.deleteExpense(id);
-
-  if (!expense) {
-    return res.status(404).json({
-      success: false,
-      message: `Expense with ID ${id} not found`,
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "Expense deleted successfully",
-    expense,
-  });
 }
 
 module.exports = {
