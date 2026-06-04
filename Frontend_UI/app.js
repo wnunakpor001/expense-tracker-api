@@ -118,7 +118,7 @@ async function deleteExpense(id) {
 }
 
 function startEdit(expense) {
-  document.getElementById("edit-id").value    = expense.id;
+  document.getElementById("edit-id").value    = expense._id;
   document.getElementById("inp-title").value  = expense.title;
   document.getElementById("inp-amount").value = expense.amount;
   document.getElementById("inp-date").value   = expense.date;
@@ -197,7 +197,7 @@ function renderList() {
       <div class="expense-amount">$${formatNum(exp.amount)}</div>
       <div class="item-actions">
         <button class="btn-edit" title="Edit" onclick='startEdit(${JSON.stringify(exp)})'>✏️</button>
-        <button class="btn-delete" title="Delete" onclick="deleteExpense(${exp.id})">🗑️</button>
+        <button class="btn-delete" title="Delete" onclick="deleteExpense(${exp._id})">🗑️</button>
       </div>
     `;
     list.appendChild(item);
