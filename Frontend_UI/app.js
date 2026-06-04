@@ -1,5 +1,5 @@
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const API = "http://localhost:4000/expenses";
+const API = "https://expense-tracker-api-4lsu.onrender.com/expenses";
 
 const CATEGORIES = [
   { name: "food",          emoji: "🍔", color: "#ff5c3a" },
