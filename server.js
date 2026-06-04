@@ -7,7 +7,7 @@ require("dotenv").config(); // Load .env variables first, before anything else
 const express    = require("express");
 const cors       = require("cors");
 const connectDB  = require("./config/db");
-const expenseRoutes = require("./routes/expenseRoutes"); 
+const expenseRoutes = require("./Routes/expenseRoutes"); 
 const errorHandler  = require("./middleware/errorHandler");
 
 const app = express();
