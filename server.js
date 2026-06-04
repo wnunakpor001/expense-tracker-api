@@ -6,6 +6,7 @@ require("dotenv").config(); // Load .env variables first, before anything else
 
 const express    = require("express");
 const cors       = require("cors");
+const path = require("path");
 const connectDB  = require("./config/db");
 const expenseRoutes = require("./Routes/expenseRoutes"); 
 const errorHandler  = require("./middleware/errorHandler");
@@ -18,6 +19,8 @@ connectDB();
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
+// Serve frontend files
+app.use(express.static(path.join(__dirname, "Frontend_UI")));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/expenses", expenseRoutes);
