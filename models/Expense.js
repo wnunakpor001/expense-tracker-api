@@ -1,11 +1,15 @@
 // models/Expense.js
-// Defines the shape of an expense document in MongoDB using Mongoose.
-// This replaces the old expenseStore.js — Mongoose handles all data operations now.
+// Each expense now has an "owner" field linking it to the user who created it.
 
 const mongoose = require("mongoose");
 
 const expenseSchema = new mongoose.Schema(
   {
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,   // Every expense must belong to a user
+    },
     title: {
       type: String,
       required: [true, "Title is required"],
@@ -18,22 +22,22 @@ const expenseSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      required: [true, "Category is required"],  
+      required: [true, "Category is required"],
       lowercase: true,
-      trim: true, 
+      trim: true,
       enum: {
         values: ["food", "transport", "utilities", "health", "education", "entertainment", "shopping", "other"],
-        message: "Invalid category. Must be one of: food, transport, utilities, health, education, entertainment, shopping, other",
+        message: "Invalid category",
       },
     },
-    date: { 
+    date: {
       type: String,
       required: [true, "Date is required"],
       match: [/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"],
     },
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 

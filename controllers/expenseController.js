@@ -1,25 +1,22 @@
 // controllers/expenseController.js
-// All CRUD logic now uses Mongoose model methods instead of the in-memory store.
-// Mongoose returns Promises, so every function is async/await.
+// All operations are now scoped to req.user._id — users only see their own expenses.
 
 const Expense = require("../models/Expense");
 
 /**
  * GET /expenses
- * Returns all expenses. Supports optional ?category= filter.
+ * Returns only the logged-in user's expenses.
  */
 async function getAllExpenses(req, res) {
   try {
-    const filter = {};
+    const filter = { owner: req.user._id }; // Only fetch this user's expenses
 
-    // If ?category=food is passed, add it to the query filter
     if (req.query.category) {
       filter.category = req.query.category.trim().toLowerCase();
     }
 
-    const expenses = await Expense.find(filter).sort({ createdAt: -1 }); // Newest first
-
-    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const expenses = await Expense.find(filter).sort({ createdAt: -1 });
+    const total    = expenses.reduce((sum, e) => sum + e.amount, 0);
 
     res.status(200).json({
       success: true,
@@ -34,22 +31,24 @@ async function getAllExpenses(req, res) {
 
 /**
  * GET /expenses/:id
- * Returns a single expense by its MongoDB _id.
+ * Returns one expense — only if it belongs to the logged-in user.
  */
 async function getExpenseById(req, res) {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({
+      _id:   req.params.id,
+      owner: req.user._id,   // Ensures users can't access other people's expenses
+    });
 
     if (!expense) {
       return res.status(404).json({
         success: false,
-        message: `Expense with ID ${req.params.id} not found`,
+        message: `Expense not found`,
       });
     }
 
     res.status(200).json({ success: true, expense });
   } catch (error) {
-    // Mongoose throws a CastError when the ID format is invalid
     if (error.name === "CastError") {
       return res.status(400).json({ success: false, message: "Invalid expense ID format" });
     }
@@ -59,13 +58,19 @@ async function getExpenseById(req, res) {
 
 /**
  * POST /expenses
- * Creates and saves a new expense to MongoDB.
+ * Creates a new expense and assigns it to the logged-in user.
  */
 async function createExpense(req, res) {
   try {
     const { title, amount, category, date } = req.body;
 
-    const expense = await Expense.create({ title, amount, category, date });
+    const expense = await Expense.create({
+      owner: req.user._id,   // Automatically set from the token
+      title,
+      amount,
+      category,
+      date,
+    });
 
     res.status(201).json({
       success: true,
@@ -79,30 +84,23 @@ async function createExpense(req, res) {
 
 /**
  * PUT /expenses/:id
- * Fully replaces an existing expense. All fields required.
+ * Fully updates an expense — only if it belongs to the logged-in user.
  */
 async function updateExpense(req, res) {
   try {
     const { title, amount, category, date } = req.body;
 
-    const expense = await Expense.findByIdAndUpdate(
-      req.params.id,
+    const expense = await Expense.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user._id },
       { title, amount, category, date },
-      { new: true, runValidators: true } // new: return updated doc; runValidators: recheck schema rules
+      { new: true, runValidators: true }
     );
 
     if (!expense) {
-      return res.status(404).json({
-        success: false,
-        message: `Expense with ID ${req.params.id} not found`,
-      });
+      return res.status(404).json({ success: false, message: "Expense not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Expense updated successfully",
-      expense,
-    });
+    res.status(200).json({ success: true, message: "Expense updated successfully", expense });
   } catch (error) {
     if (error.name === "CastError") {
       return res.status(400).json({ success: false, message: "Invalid expense ID format" });
@@ -113,28 +111,21 @@ async function updateExpense(req, res) {
 
 /**
  * PATCH /expenses/:id
- * Partially updates an expense — only the provided fields are changed.
+ * Partially updates an expense — only if it belongs to the logged-in user.
  */
 async function patchExpense(req, res) {
   try {
-    const expense = await Expense.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },  // $set only updates the fields provided
+    const expense = await Expense.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user._id },
+      { $set: req.body },
       { new: true, runValidators: true }
     );
 
     if (!expense) {
-      return res.status(404).json({
-        success: false,
-        message: `Expense with ID ${req.params.id} not found`,
-      });
+      return res.status(404).json({ success: false, message: "Expense not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Expense updated successfully",
-      expense,
-    });
+    res.status(200).json({ success: true, message: "Expense updated successfully", expense });
   } catch (error) {
     if (error.name === "CastError") {
       return res.status(400).json({ success: false, message: "Invalid expense ID format" });
@@ -145,24 +136,20 @@ async function patchExpense(req, res) {
 
 /**
  * DELETE /expenses/:id
- * Deletes an expense from MongoDB and returns the deleted document.
+ * Deletes an expense — only if it belongs to the logged-in user.
  */
 async function deleteExpense(req, res) {
   try {
-    const expense = await Expense.findByIdAndDelete(req.params.id);
+    const expense = await Expense.findOneAndDelete({
+      _id:   req.params.id,
+      owner: req.user._id,
+    });
 
     if (!expense) {
-      return res.status(404).json({
-        success: false,
-        message: `Expense with ID ${req.params.id} not found`,
-      });
+      return res.status(404).json({ success: false, message: "Expense not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Expense deleted successfully",
-      expense,
-    });
+    res.status(200).json({ success: true, message: "Expense deleted successfully", expense });
   } catch (error) {
     if (error.name === "CastError") {
       return res.status(400).json({ success: false, message: "Invalid expense ID format" });

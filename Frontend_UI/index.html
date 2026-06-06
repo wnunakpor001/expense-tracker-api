@@ -3,105 +3,142 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ExpenseTracker — API</title>
-
-  <!-- Google Fonts -->
+  <title>ExpenseTracker — Group 3</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
-
-  <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-  <!-- ── HEADER ──────────────────────────────────────────────────────────── -->
-  <header>
-    <h1>EXPENSE<span>TRACKER</span></h1>
-    <span class="header-badge">BeTechified</span>
-  </header>
+  <!-- ── AUTH SCREEN ─────────────────────────────────────────────────────── -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">EXPENSE<span>TRACKER</span></div>
+      <p class="auth-tagline">Track your spending. Own your money.</p>
 
-  <div class="container">
-
-    <!-- ── SUMMARY STATS ─────────────────────────────────────────────────── -->
-    <div class="summary">
-      <div class="stat-card">
-        <div class="accent-bar"></div>
-        <div class="label">Total Expenses</div>
-        <div class="value" id="stat-count">0</div>
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="auth-tab-login" onclick="switchToLogin()">Login</button>
+        <button class="auth-tab" id="auth-tab-register" onclick="switchToRegister()">Register</button>
       </div>
-      <div class="stat-card">
-        <div class="accent-bar"></div>
-        <div class="label">Total Amount</div>
-        <div class="value" id="stat-total">$0</div>
-      </div>
-      <div class="stat-card">
-        <div class="accent-bar"></div>
-        <div class="label">Top Category</div>
-        <div class="value" id="stat-top" style="font-size:1.5rem;">—</div>
-      </div>
-    </div>
 
-    <div class="main-grid">
-
-      <!-- ── FORM ────────────────────────────────────────────────────────── -->
-      <div class="form-card">
-        <div class="form-card-header">
-          <span id="form-title-text">➕ ADD EXPENSE</span>
-          <span class="mode-badge" id="edit-badge">Editing</span>
+      <!-- Login Form -->
+      <div id="login-form">
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com"/>
         </div>
-        <div class="form-body">
-          <input type="hidden" id="edit-id"/>
-
-          <div>
-            <label for="inp-title">Title</label>
-            <input type="text" id="inp-title" placeholder="e.g. Lunch at Mr Biggs"/>
-          </div>
-
-          <div>
-            <label for="inp-amount">Amount ($)</label>
-            <input type="number" id="inp-amount" placeholder="e.g. 2500" min="0.01" step="0.01"/>
-          </div>
-
-          <div>
-            <label>Category</label>
-            <div class="category-grid" id="category-grid"></div>
-            <input type="hidden" id="inp-category"/>
-          </div>
-
-          <div>
-            <label for="inp-date">Date</label>
-            <input type="date" id="inp-date"/>
-          </div>
-
-          <button class="btn-submit" id="btn-submit" onclick="handleSubmit()">ADD EXPENSE</button>
-          <button class="btn-cancel" id="btn-cancel" onclick="cancelEdit()">✕ Cancel Edit</button>
+        <div class="auth-field">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Your password"/>
         </div>
+        <button class="btn-auth" onclick="handleLogin()">LOGIN</button>
+        <p class="auth-switch">No account? <a onclick="switchToRegister()">Register here</a></p>
       </div>
 
-      <!-- ── EXPENSE LIST ───────────────────────────────────────────────── -->
-      <div>
-        <div class="list-header">
-          <div class="list-title">ALL EXPENSES</div>
-          <div class="filter-row" id="filter-row">
-            <button class="filter-btn active" data-cat="all" onclick="filterBy('all', this)">All</button>
-          </div>
+      <!-- Register Form -->
+      <div id="register-form" style="display:none">
+        <div class="auth-field">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="Wisdom Nunakpor"/>
         </div>
-
-        <div class="empty-state visible" id="empty-state">
-          <span class="big-icon">💸</span>
-          <p>No expenses yet. Add your first one!</p>
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="you@example.com"/>
         </div>
-
-        <div class="expense-list" id="expense-list"></div>
+        <div class="auth-field">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="Min. 6 characters"/>
+        </div>
+        <button class="btn-auth" onclick="handleRegister()">CREATE ACCOUNT</button>
+        <p class="auth-switch">Have an account? <a onclick="switchToLogin()">Login here</a></p>
       </div>
-
     </div>
   </div>
 
-  <!-- Toast notification -->
+  <!-- ── MAIN APP ─────────────────────────────────────────────────────────── -->
+  <div id="main-app" style="display:none">
+
+    <header>
+      <h1>EXPENSE<span>TRACKER</span></h1>
+      <div class="header-right">
+        <span id="user-name" class="user-name"></span>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
+      </div>
+    </header>
+
+    <div class="container">
+
+      <!-- Summary Stats -->
+      <div class="summary">
+        <div class="stat-card">
+          <div class="accent-bar"></div>
+          <div class="label">Total Expenses</div>
+          <div class="value" id="stat-count">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="accent-bar"></div>
+          <div class="label">Total Amount</div>
+          <div class="value" id="stat-total">GHS 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="accent-bar"></div>
+          <div class="label">Top Category</div>
+          <div class="value" id="stat-top" style="font-size:1.5rem;">—</div>
+        </div>
+      </div>
+
+      <div class="main-grid">
+
+        <!-- Form -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <span id="form-title-text">➕ ADD EXPENSE</span>
+            <span class="mode-badge" id="edit-badge">Editing</span>
+          </div>
+          <div class="form-body">
+            <input type="hidden" id="edit-id"/>
+            <div>
+              <label for="inp-title">Title</label>
+              <input type="text" id="inp-title" placeholder="e.g. Lunch at Papaye"/>
+            </div>
+            <div>
+              <label for="inp-amount">Amount (GHS)</label>
+              <input type="number" id="inp-amount" placeholder="e.g. 85.00" min="0.01" step="0.01"/>
+            </div>
+            <div>
+              <label>Category</label>
+              <div class="category-grid" id="category-grid"></div>
+              <input type="hidden" id="inp-category"/>
+            </div>
+            <div>
+              <label for="inp-date">Date</label>
+              <input type="date" id="inp-date"/>
+            </div>
+            <button class="btn-submit" id="btn-submit" onclick="handleSubmit()">ADD EXPENSE</button>
+            <button class="btn-cancel" id="btn-cancel" onclick="cancelEdit()">✕ Cancel Edit</button>
+          </div>
+        </div>
+
+        <!-- Expense List -->
+        <div>
+          <div class="list-header">
+            <div class="list-title">MY EXPENSES</div>
+            <div class="filter-row" id="filter-row">
+              <button class="filter-btn active" data-cat="all" onclick="filterBy('all', this)">All</button>
+            </div>
+          </div>
+          <div class="empty-state visible" id="empty-state">
+            <span class="big-icon">💸</span>
+            <p>No expenses yet. Add your first one!</p>
+          </div>
+          <div class="expense-list" id="expense-list"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
-
-  <!-- JavaScript -->
   <script src="app.js"></script>
-
 </body>
 </html>
