@@ -1,10 +1,10 @@
 // controllers/authController.js
 // Handles registration (with email PIN verification), login, and PIN confirmation.
+// Uses Brevo HTTP API for sending emails — works on Render's free tier.
 
-const jwt        = require("jsonwebtoken");
-const bcrypt     = require("bcryptjs");
-const nodemailer = require("nodemailer");
-const User       = require("../models/User");
+const jwt   = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const User  = require("../models/User");
 
 // ── Temporary store for unverified registrations ──────────────────────────────
 // Holds pending signups while waiting for PIN confirmation.
@@ -25,33 +25,46 @@ function generateToken(userId) {
   );
 }
 
-// ── Helper: Send PIN email via Gmail ─────────────────────────────────────────
+// ── Helper: Send PIN email via Brevo HTTP API ─────────────────────────────────
+// Uses HTTPS instead of SMTP — works on Render's free tier.
 async function sendPINEmail(toEmail, name, pin) {
-  const transporter = nodemailer.createTransport({
-  host:   "smtp-relay.brevo.com",
-  port:   587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,  // Your Brevo SMTP login
-    pass: process.env.EMAIL_PASS,  // Your Brevo SMTP password
-  },
-});;
-
-  await transporter.sendMail({
-    from:    `"ExpenseTracker" <${process.env.EMAIL_USER}>`,
-    to:      toEmail,
-    subject: "Your ExpenseTracker Verification PIN",
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; border: 2px solid #0d0d0d; border-radius: 12px;">
-        <h2 style="font-size: 1.8rem; letter-spacing: 2px; margin-bottom: 8px;">EXPENSE<span style="color:#ff5c3a;">TRACKER</span></h2>
-        <p style="color: #555; margin-bottom: 24px;">Hi <strong>${name}</strong>, here is your verification PIN:</p>
-        <div style="background: #0d0d0d; color: #c8f135; font-size: 2.5rem; font-weight: 700; letter-spacing: 10px; text-align: center; padding: 24px; border-radius: 8px; margin-bottom: 24px;">
-          ${pin}
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": process.env.BREVO_API_KEY,  // Brevo API key from .env
+    },
+    body: JSON.stringify({
+      sender: {
+        name:  "ExpenseTracker",
+        email: process.env.EMAIL_FROM,        // Your registered Brevo sender email
+      },
+      to: [{ email: toEmail, name }],
+      subject: "Your ExpenseTracker Verification PIN",
+      htmlContent: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;border:2px solid #0d0d0d;border-radius:12px;">
+          <h2 style="font-size:1.8rem;letter-spacing:2px;margin-bottom:8px;">
+            EXPENSE<span style="color:#ff5c3a;">TRACKER</span>
+          </h2>
+          <p style="color:#555;margin-bottom:24px;">
+            Hi <strong>${name}</strong>, here is your verification PIN:
+          </p>
+          <div style="background:#0d0d0d;color:#c8f135;font-size:2.5rem;font-weight:700;letter-spacing:10px;text-align:center;padding:24px;border-radius:8px;margin-bottom:24px;">
+            ${pin}
+          </div>
+          <p style="color:#888;font-size:0.85rem;">
+            This PIN expires in <strong>10 minutes</strong>. If you did not request this, ignore this email.
+          </p>
         </div>
-        <p style="color: #888; font-size: 0.85rem;">This PIN expires in <strong>10 minutes</strong>. If you did not request this, ignore this email.</p>
-      </div>
-    `,
+      `,
+    }),
   });
+
+  // If Brevo returns an error, throw it so register() catches it
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`Email sending failed: ${error.message || response.statusText}`);
+  }
 }
 
 // ── STEP 1: REGISTER ──────────────────────────────────────────────────────────
@@ -101,14 +114,14 @@ async function register(req, res) {
       expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes from now
     };
 
-    // Send the PIN to their email
+    // Send the PIN to their email via Brevo HTTP API
     await sendPINEmail(email, name, pin);
 
     // Tell the frontend to show the PIN entry screen
     res.status(200).json({
       success: true,
       message: "A 5-digit PIN has been sent to your email. Please verify to complete registration.",
-      email,  // Send email back so frontend knows which email to verify
+      email, // Send email back so frontend knows which email to verify
     });
 
   } catch (error) {
@@ -201,10 +214,10 @@ async function resendPin(req, res) {
     }
 
     // Generate a fresh PIN and reset the 10 minute timer
-    const newPin             = generatePIN();
-    pending.pin              = newPin;
-    pending.expiresAt        = Date.now() + 10 * 60 * 1000;
-    pendingUsers[email]      = pending;
+    const newPin        = generatePIN();
+    pending.pin         = newPin;
+    pending.expiresAt   = Date.now() + 10 * 60 * 1000;
+    pendingUsers[email] = pending;
 
     await sendPINEmail(email, pending.name, newPin);
 
