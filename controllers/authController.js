@@ -28,12 +28,14 @@ function generateToken(userId) {
 // ── Helper: Send PIN email via Gmail ─────────────────────────────────────────
 async function sendPINEmail(toEmail, name, pin) {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,   // Your Gmail address from .env
-      pass: process.env.EMAIL_PASS,   // Your Gmail App Password from .env
-    },
-  });
+  host:   "smtp-relay.brevo.com",
+  port:   587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,  // Your Brevo SMTP login
+    pass: process.env.EMAIL_PASS,  // Your Brevo SMTP password
+  },
+});;
 
   await transporter.sendMail({
     from:    `"ExpenseTracker" <${process.env.EMAIL_USER}>`,
