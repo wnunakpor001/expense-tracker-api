@@ -1,98 +1,148 @@
 # 💸 Expense Tracker API
 
-A modern full-stack expense tracking application built with **Node.js**, **Express.js**, and **Vanilla HTMl, CSS and JavaScript**. This application allows users to create, view, update, filter, and delete expenses through an intuitive and responsive user interface connected to a RESTful API backend.
+A modern **full-stack Expense Tracker application** built with **Node.js**, **Express.js**, **MongoDB**, and **Vanilla HTML, CSS, and JavaScript**. The application enables users to securely manage their expenses through an intuitive interface backed by a RESTful API.
 
 ---
 
-## 📖 Overview
+## 🌐 Live Links
 
-The Expense Tracker API is designed to help users efficiently manage their daily expenses. It provides a clean frontend experience while exposing powerful backend endpoints for expense management.
+🚀 Live API: https://expense-tracker-api-4lsu.onrender.com/
 
-### Key Features
+📂 GitHub Repository: https://github.com/wnunakpor001/expense-tracker-api
 
-* Add new expenses
-* View all expenses
-* Filter expenses by category
-* Edit existing expenses
+## 🚀 Features
+
+### Authentication
+
+* User registration
+* User login
+* JWT-based authentication
+* Protected routes
+
+### Expense Management
+
+* Create new expenses
+* View all personal expenses
+* Update existing expenses
 * Delete expenses
-* Real-time expense summaries
+* Filter expenses by category
+* Input validation
+* Error handling
+
+### Frontend
+
 * Responsive user interface
-* RESTful API architecture
-* Input validation and error handling
+* Dynamic expense management
+* Fetch API integration
+* Real-time updates
 
 ---
 
-## 🏗️ Project Structure
+## 🛠️ Tech Stack
+
+### Backend
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* JSON Web Token (JWT)
+
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript (ES6)
+
+### Development Tools
+
+* Nodemon
+* Git & GitHub
+* Postman
+
+---
+
+## 📂 Project Structure
 
 ```text
 expense-tracker-api/
-├── server.js
-├── package.json
 │
-├── routes/
-│   └── expenseRoutes.js
+├── config/
+│   └── db.js
 │
 ├── controllers/
+│   ├── authController.js
 │   └── expenseController.js
 │
-├── data/
-│   └── expenseStore.js
+├── Frontend_UI/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
 │
 ├── middleware/
-│   ├── validateExpense.js
-│   └── errorHandler.js
+│   ├── errorHandler.js
+│   ├── protect.js
+│   └── validateExpense.js
 │
-├── index.html
-├── style.css
-├── app.js
+├── models/
+│   ├── User.js
+│   └── Expense.js
 │
+├── routes/
+│   ├── authRoutes.js
+│   └── expenseRoutes.js
+│
+├── .env
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── server.js
 └── README.md
 ```
 
-### Folder Description
+---
 
-| Folder/File    | Purpose                       |
-| -------------- | ----------------------------- |
-| `server.js`     | Application entry point       |
-| `routes/`      | Defines API routes            |
-| `controllers/` | Handles business logic        |
-| `data/`        | Stores application data       |
-| `middleware/`  | Validation and error handling |
-| `index.html`   | Frontend structure            |
-| `style.css`    | User interface styling        |
-| `app.js`       | Frontend functionality        |
+## 📋 Folder Description
+
+| Folder/File    | Description                                    |
+| -------------- | ---------------------------------------------- |
+| `config/`      | Database connection setup                      |
+| `controllers/` | Application business logic                     |
+| `models/`      | MongoDB schemas                                |
+| `routes/`      | API route definitions                          |
+| `middleware/`  | Authentication, validation, and error handling |
+| `Frontend_UI/` | Client-side application                        |
+| `server.js`    | Application entry point                        |
 
 ---
 
-## 🚀 Getting Started
+## ⚙️ Installation
 
-### Prerequisites
-
-Before running the project, ensure you have the following installed:
-
-* Node.js (LTS Version)
-* Git
-* Postman (Optional)
-* Visual Studio Code or any preferred code editor
-
----
-
-## 📥 Installation
-
-### 1. Clone the Repository
+### Clone the repository
 
 ```bash
-git clone https://github.com/your-username/expense-tracker-api.git
+git clone https://github.com/wnunakpor001/expense-tracker-api.git
+
 cd expense-tracker-api
 ```
 
-### 2. Install Dependencies
+### Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Start the Application
+### Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+PORT=3000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+```
+
+### Run the application
 
 Development mode:
 
@@ -106,7 +156,7 @@ Production mode:
 npm start
 ```
 
-The server will run at:
+The server will start on:
 
 ```text
 http://localhost:3000
@@ -114,204 +164,134 @@ http://localhost:3000
 
 ---
 
-## 🔗 Frontend Integration
+## 🔗 API Endpoints
 
-The frontend communicates with the backend using JavaScript's Fetch API.
+### Authentication
 
-Example configuration:
+| Method | Endpoint             | Description         |
+| ------ | -------------------- | ------------------- |
+| POST   | `/api/auth/register` | Register a new user |
+| POST   | `/api/auth/login`    | Login a user        |
 
-```javascript
-const API = "http://localhost:3000/expenses";
-```
+### Expenses
 
-### Enable CORS
+| Method | Endpoint            | Description          |
+| ------ | ------------------- | -------------------- |
+| GET    | `/api/expenses`     | Get all expenses     |
+| GET    | `/api/expenses/:id` | Get a single expense |
+| POST   | `/api/expenses`     | Create a new expense |
+| PUT    | `/api/expenses/:id` | Update an expense    |
+| DELETE | `/api/expenses/:id` | Delete an expense    |
 
-Install:
-
-```bash
-npm install cors
-```
-
-Configure:
-
-```javascript
-const cors = require("cors");
-
-app.use(cors());
-```
+> Some routes require JWT authentication.
 
 ---
 
-## 🛠️ API Documentation
-
-### Base URL
-
-```text
-http://localhost:3000
-```
-
-### Available Endpoints
-
-| Method | Endpoint                  | Description                  |
-| ------ | ------------------------- | ---------------------------- |
-| GET    | `/expenses`               | Retrieve all expenses        |
-| GET    | `/expenses/:id`           | Retrieve a single expense    |
-| GET    | `/expenses?category=food` | Filter expenses by category  |
-| POST   | `/expenses`               | Create a new expense         |
-| PUT    | `/expenses/:id`           | Update an expense completely |
-| PATCH  | `/expenses/:id`           | Update specific fields       |
-| DELETE | `/expenses/:id`           | Delete an expense            |
-
----
-
-## 📄 Expense Object Structure
+## 📄 Sample Expense Object
 
 ```json
 {
-  "id": 1,
-  "title": "Lunch at Papaye",
+  "_id": "6840ab12345ef67890",
+  "title": "Lunch",
   "amount": 85,
-  "category": "food",
-  "date": "2026-05-31",
-  "createdAt": "2026-05-31T10:00:00.000Z",
-  "updatedAt": "2026-05-31T10:00:00.000Z"
+  "category": "Food",
+  "date": "2026-06-09",
+  "user": "6840ab12345ef67891"
 }
 ```
 
 ---
 
-## 📂 Supported Categories
+## 🔒 Authentication
 
-* Food
-* Transport
-* Utilities
-* Health
-* Education
-* Entertainment
-* Shopping
-* Other
+This project uses **JSON Web Tokens (JWT)** for authentication.
 
----
-
-## 📌 Example API Requests
-
-### Create Expense
+After login, include the token in the request header:
 
 ```http
-POST /expenses
-Content-Type: application/json
-
-{
-  "title": "Trotro Fare",
-  "amount": 5.50,
-  "category": "transport",
-  "date": "2026-05-31"
-}
-```
-
-### Update Expense Amount
-
-```http
-PATCH /expenses/1
-Content-Type: application/json
-
-{
-  "amount": 7.00
-}
+Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
 ---
 
-## 📊 HTTP Status Codes
+## 🧪 Testing
 
-| Status Code | Description           |
-| ----------- | --------------------- |
-| 200         | Request successful    |
-| 201         | Resource created      |
-| 400         | Validation error      |
-| 404         | Resource not found    |
-| 500         | Internal server error |
+You can test the API using:
 
----
+* Postman
+* Thunder Client
+* Insomnia
 
-## 🎨 Frontend Features
-
-* Expense creation form
-* Expense editing
-* Expense deletion with confirmation
-* Dynamic category filtering
-* Real-time statistics
-* Toast notifications
-* Mobile-friendly responsive design
-
----
-
-## 🔄 Request Lifecycle
-
-```text
-Frontend (HTML/CSS/JavaScript)
-        ↓
-HTTP Request
-        ↓
-Express Server
-        ↓
-Routes
-        ↓
-Middleware Validation
-        ↓
-Controllers
-        ↓
-Data Layer
-        ↓
-JSON Response
-        ↓
-Frontend Update
-```
-
----
-
-## 🧪 API Testing
-
-You can test all endpoints using Postman.
-
-Recommended steps:
-
-1. Create a collection named "Expense Tracker API"
-2. Add requests for each endpoint
-3. Use JSON request bodies for POST, PUT, and PATCH requests
-4. Verify responses and status codes
+Test authentication first to obtain a JWT token before accessing protected routes.
 
 ---
 
 ## 📦 Dependencies
 
-| Package | Purpose                                     |
-| ------- | ------------------------------------------- |
-| Express | Backend framework                           |
-| Cors    | Cross-origin resource sharing               |
-| Nodemon | Automatic server restart during development |
+* Express.js
+* Mongoose
+* JSON Web Token
+* dotenv
+* bcryptjs
+* cors
+* nodemon
+
+---
+
+## 🔄 Application Flow
+
+```text
+Frontend UI
+      │
+      ▼
+HTTP Request
+      │
+      ▼
+Express Server
+      │
+      ▼
+Routes
+      │
+      ▼
+Authentication Middleware
+      │
+      ▼
+Validation Middleware
+      │
+      ▼
+Controllers
+      │
+      ▼
+MongoDB Database
+      │
+      ▼
+JSON Response
+      │
+      ▼
+Frontend Update
+```
 
 ---
 
 ## 👨‍💻 Author
 
-**Wisdom Nunakpor**
+### Wisdom Nunakpor
 
-* Backend Developer (JavaScript)
 * BSc. Mathematical Sciences Student
+* Junior Backend Developer
 * Aspiring Data Analyst & DevOps Engineer
-* Passionate about problem-solving, software development, and technology education
+* Passionate about Software Development, Statistics, and Technology Education
 
-GitHub: https://github.com/wnunakpor001
+**GitHub:** https://github.com/wnunakpor001
 
 ---
 
 ## 📜 License
 
-This project is intended for educational and learning purposes. Feel free to fork, modify, and build upon it for personal or academic use.
+This project is developed for educational and learning purposes. You are free to fork, modify, and use it for personal or academic projects.
 
 ---
 
-### ⭐ Support
+## ⭐ Support
 
-If you found this project helpful, consider giving it a star on GitHub and sharing it with others.
+If you found this project useful, consider giving it a **star ⭐ on GitHub**. Contributions, suggestions, and feedback are always welcome.
