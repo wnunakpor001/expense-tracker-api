@@ -49,9 +49,38 @@
           <label>Password</label>
           <input type="password" id="reg-password" placeholder="Min. 6 characters"/>
         </div>
-        <button class="btn-auth" onclick="handleRegister()">CREATE ACCOUNT</button>
+        <button class="btn-auth" onclick="handleRegister()">SEND VERIFICATION PIN</button>
         <p class="auth-switch">Have an account? <a onclick="switchToLogin()">Login here</a></p>
       </div>
+
+      <!-- PIN Verification Form -->
+      <div id="pin-form" style="display:none">
+        <div class="pin-info">
+          <span class="pin-icon">📬</span>
+          <p>We sent a 5-digit PIN to</p>
+          <strong id="pin-email-display"></strong>
+        </div>
+        <div class="auth-field">
+          <label>Enter Your PIN</label>
+          <input
+            type="text"
+            id="pin-input"
+            placeholder="e.g. 48291"
+            maxlength="5"
+            style="font-size:1.5rem; letter-spacing:8px; text-align:center;"
+          />
+        </div>
+        <button class="btn-auth" onclick="handleVerifyPin()">VERIFY & CREATE ACCOUNT</button>
+        <p class="auth-switch">
+          Didn't receive it?
+          <a onclick="handleResendPin()">Resend PIN</a>
+        </p>
+        <p class="auth-switch" style="margin-top:8px;">
+          Wrong email?
+          <a onclick="switchToRegister()">Go back</a>
+        </p>
+      </div>
+
     </div>
   </div>
 

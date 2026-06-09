@@ -644,3 +644,27 @@ input:focus, select:focus {
   background: var(--lime);
   color: var(--ink);
 }
+
+/* ── PIN VERIFICATION SCREEN ─────────────────────────────────────────────── */
+.pin-info {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.pin-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.pin-info p {
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.pin-info strong {
+  color: var(--ink);
+  font-size: 0.95rem;
+  word-break: break-all;
+}

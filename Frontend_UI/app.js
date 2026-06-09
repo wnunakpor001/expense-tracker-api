@@ -343,3 +343,88 @@ function showToast(msg, isError = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.className = "toast"; }, 3000);
 }
+
+// ── PIN VERIFICATION ──────────────────────────────────────────────────────────
+
+// Stores the email temporarily while waiting for PIN confirmation
+let pendingEmail = "";
+
+// Override switchToRegister to also clear PIN form
+const _origSwitchToRegister = switchToRegister;
+
+function showPinForm(email) {
+  pendingEmail = email;
+  document.getElementById("register-form").style.display = "none";
+  document.getElementById("login-form").style.display    = "none";
+  document.getElementById("pin-form").style.display      = "block";
+  document.getElementById("pin-email-display").textContent = email;
+  document.getElementById("auth-tab-register").classList.add("active");
+  document.getElementById("auth-tab-login").classList.remove("active");
+}
+
+// Override handleRegister to show PIN form after sending
+const _origHandleRegister = handleRegister;
+handleRegister = async function () {
+  const name     = document.getElementById("reg-name").value.trim();
+  const email    = document.getElementById("reg-email").value.trim();
+  const password = document.getElementById("reg-password").value;
+
+  if (!name || !email || !password) return showToast("All fields are required", true);
+
+  try {
+    const res  = await fetch(`${AUTH_URL}/register`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json();
+    if (!data.success) return showToast(data.message, true);
+
+    showToast("PIN sent! Check your email.");
+    showPinForm(email);
+  } catch (e) {
+    showToast("Server error. Try again.", true);
+  }
+};
+
+async function handleVerifyPin() {
+  const pin = document.getElementById("pin-input").value.trim();
+
+  if (!pin || pin.length !== 5) return showToast("Enter the 5-digit PIN", true);
+
+  try {
+    const res  = await fetch(`${AUTH_URL}/verify-pin`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ email: pendingEmail, pin }),
+    });
+    const data = await res.json();
+    if (!data.success) return showToast(data.message, true);
+
+    saveAuth(data.token, data.user);
+    showToast("Email verified! Welcome " + data.user.name + "!");
+    showApp();
+    buildCategoryButtons();
+    setDefaultDate();
+    fetchExpenses();
+  } catch (e) {
+    showToast("Server error. Try again.", true);
+  }
+}
+
+async function handleResendPin() {
+  if (!pendingEmail) return showToast("No email found. Please register again.", true);
+
+  try {
+    const res  = await fetch(`${AUTH_URL}/resend-pin`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ email: pendingEmail }),
+    });
+    const data = await res.json();
+    if (!data.success) return showToast(data.message, true);
+    showToast("New PIN sent! Check your email.");
+  } catch (e) {
+    showToast("Server error. Try again.", true);
+  }
+}
